@@ -54,3 +54,27 @@ if st.button("🚀 Jalankan Benchmark Sekarang", type="primary"):
         with col2:
             st.metric("Latency Standard", f"{std_lat:.2f} ms")
             st.metric("Latency TLNL", f"{tlnl_lat:.2f} ms", delta="1.22x lebih cepat")
+
+st.divider()
+
+# Section Integrasi Cepat (Tanpa membocorkan variabel privat)
+st.header("🛠️ Integrasi Cepat (Drop-in Code)")
+st.write("Copy-paste snippet di bawah ini untuk langsung menggunakan TLNL pada proyek PyTorch Anda:")
+
+code_snippet = """import torch
+import torch.nn as nn
+from tlnl import LatticeLinear
+
+# Cukup ganti nn.Linear dengan LatticeLinear
+model = nn.Sequential(
+    LatticeLinear(4096, 4096),
+    nn.ReLU(),
+    LatticeLinear(4096, 4096)
+)
+
+x = torch.randn(64, 4096)
+output = model(x)
+print("Output shape:", output.shape)
+"""
+
+st.code(code_snippet, language="python")
