@@ -7,7 +7,7 @@ from tlnl.layers import LatticeLinear
 st.set_page_config(page_title="TLNL Demo", page_icon="⚡", layout="wide")
 
 st.title("⚡ TLNL: Tensor Lattice Neural Layer")
-st.write("Aplikasi Demo Efisiensi VRAM & Latensi Berbasis Geometri $\pi_{\text{eff}}$")
+st.write(r"Aplikasi Demo Efisiensi VRAM & Latensi Berbasis Geometri $\pi_{\mathrm{eff}}$")
 
 # Sidebar Configuration
 st.sidebar.header("⚙️ Konfigurasi Model")
