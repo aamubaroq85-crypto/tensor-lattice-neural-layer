@@ -6,18 +6,17 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setuptools.setup(
     name="tlnl",
     version="0.1.0",
-    author="TLNL Team",
-    author_email="author@example.com",
-    description="Tensor Lattice Neural Layer for PyTorch memory & latency optimization",
+    author="Baroq",
+    author_email="aamubaroq85@gmail.com",
+    description="Tensor Lattice Neural Layer for PyTorch memory and latency optimization",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/username/tlnl",  # Sesuaikan dengan URL repo Anda
+    url="https://github.com/aamubaroq85-crypto/tensor-lattice-neural-layer",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
     python_requires=">=3.8",
     install_requires=[
