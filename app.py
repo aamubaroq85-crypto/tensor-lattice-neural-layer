@@ -12,16 +12,10 @@ st.set_page_config(
 
 # --- 2. DEFINISI ARSITEKTUR MODEL JARINGAN SARAF ---
 class TLNLClassificationModel(nn.Module):
-    """
-    Contoh arsitektur PyTorch yang menggabungkan LatticeLinear
-    sebagai drop-in replacement untuk nn.Linear standar.
-    """
     def __init__(self, in_features: int, hidden_features: int, num_classes: int):
         super().__init__()
-        # Layer 1: Menggunakan LatticeLinear dari library PyPI
         self.layer1 = LatticeLinear(in_features=in_features, out_features=hidden_features)
         self.relu = nn.ReLU()
-        # Layer 2: Output layer
         self.layer2 = LatticeLinear(in_features=hidden_features, out_features=num_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -32,10 +26,7 @@ class TLNLClassificationModel(nn.Module):
 
 # --- 3. ANTARMUKA UTAMA ---
 st.title("⚡ Tensor Lattice Neural Layer (TLNL)")
-st.markdown("""
-Aplikasi demo interaktif untuk menguji performa dan integrasi paket **`tensor-lattice-neural-layer`** 
-yang dipublikasikan di PyPI.
-""")
+st.write("Aplikasi demo interaktif untuk menguji performa dan integrasi paket **tensor-lattice-neural-layer** yang dipublikasikan di PyPI.")
 
 st.divider()
 
@@ -43,11 +34,11 @@ st.divider()
 st.sidebar.header("⚙️ Konfigurasi Tensor")
 
 input_dim = st.sidebar.number_input(
-    "Jumlah Input Features (Dimensi Input)", 
+    "Jumlah Input Features", 
     min_value=8, max_value=2048, value=512, step=64
 )
 hidden_dim = st.sidebar.number_input(
-    "Jumlah Hidden Features (Hidden Layer)", 
+    "Jumlah Hidden Features", 
     min_value=8, max_value=1024, value=128, step=32
 )
 num_classes = st.sidebar.number_input(
@@ -67,30 +58,23 @@ with col_left:
     
     if st.button("🚀 Jalankan Simulasi Model", type="primary"):
         try:
-            # Inisialisasi model
             model = TLNLClassificationModel(
                 in_features=input_dim, 
                 hidden_features=hidden_dim, 
                 num_classes=num_classes
             )
             
-            # Buat tensor input acak (dummy data)
             dummy_x = torch.randn(batch_size, input_dim)
-            
-            # Eksekusi model (forward pass)
             output = model(dummy_x)
             
-            # Tampilkan indikator sukses
             st.success("✅ Forward Pass Berhasil Dieksekusi!")
             
-            # Matriks ukuran tensor
             m1, m2, m3 = st.columns(3)
             m1.metric("Input Shape", str(list(dummy_x.shape)))
             m2.metric("Hidden Shape", f"[{batch_size}, {hidden_dim}]")
             m3.metric("Output Shape", str(list(output.shape)))
             
-            # Pratinjau Nilai Tensor Output (3 data pertama)
-            with st.expander("🔍 Lihat Detail Tensor Output (Raw Values)"):
+            with st.expander("🔍 Lihat Detail Tensor Output"):
                 st.dataframe(output.detach().numpy()[:3])
                 
         except Exception as e:
@@ -98,30 +82,22 @@ with col_left:
 
 with col_right:
     st.subheader("📝 Cara Menggunakan di Kode Python")
-    st.code(f"""
-import torch
-from tlnl import LatticeLinear
-
-# 1. Deklarasi Layer
-layer = LatticeLinear(
-    in_features={input_dim}, 
-    out_features={hidden_dim}
-)
-
-# 2. Buat Input Tensor
-x = torch.randn({batch_size}, {input_dim})
-
-# 3. Jalankan Output
-output = layer(x)
-
-print("Output shape:", output.shape)
-    """, language="python")
+    code_example = (
+        "import torch\n"
+        "from tlnl import LatticeLinear\n\n"
+        f"# 1. Deklarasi Layer\n"
+        f"layer = LatticeLinear(in_features={input_dim}, out_features={hidden_dim})\n\n"
+        f"# 2. Buat Input Tensor\n"
+        f"x = torch.randn({batch_size}, {input_dim})\n\n"
+        f"# 3. Jalankan Output\n"
+        f"output = layer(x)\n\n"
+        'print("Output shape:", output.shape)'
+    )
+    st.code(code_example, language="python")
 
 st.divider()
 
 # --- 6. FOOTER INFORMASI PAKET ---
-st.markdown("""
-### 📦 Detail Instalasi Paket
-Untuk menggunakan modul ini di lingkungan lokal Anda, pasang langsung melalui pip:
-```bash
-pip install tensor-lattice-neural-layer
+st.subheader("📦 Detail Instalasi Paket")
+st.write("Untuk menggunakan modul ini di lingkungan lokal, pasang langsung melalui pip:")
+st.code("pip install tensor-lattice-neural-layer", language="bash")
