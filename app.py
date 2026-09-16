@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import json
-import io
+import os
+import matplotlib.pyplot as plt
 
 st.set_page_config(
     page_title="Tensor Lattice Neural Layer (TLNL) Enterprise SaaS",
@@ -28,18 +29,46 @@ st.markdown("""
 st.title("⚡ Tensor Lattice Neural Layer (TLNL) Enterprise SaaS")
 st.markdown("**Platform Komersial Berbasis Neural Network Lanjutan untuk Optimasi Tensor dan Pemrosesan Skala Industri**")
 
-# Sidebar - Portal Manajemen Lisensi & Autentikasi
-st.sidebar.header("🔐 Portal Lisensi Enterprise")
+# Inisialisasi Database Klien Lokal (JSON)
+DB_FILE = "client_database.json"
+
+def load_client_db():
+    if os.path.exists(DB_FILE):
+        with open(DB_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_client_db(db):
+    with open(DB_FILE, "w") as f:
+        json.dump(db, f, indent=4)
+
+client_db = load_client_db()
+
+# Sidebar - Portal Manajemen Lisensi & Aktivasi Pembayaran
+st.sidebar.header("🔐 Portal Lisensi & Aktivasi")
 license_key = st.sidebar.text_input("Masukkan License Key", type="password", placeholder="Contoh: TLNL-ENT-2026")
 
-# Database simulasi kunci lisensi sah (bisa dihubungkan ke database/backend eksternal nanti)
-VALID_ENTERPRISE_KEYS = ["TLNL-PRO-2026-BAROQ", "TLNL-ENT-V1", "TLNL-ENTERPRISE-DEMO"]
+# Database simulasi kunci lisensi sah
+VALID_ENTERPRISE_KEYS = {
+    "TLNL-PRO-2026-BAROQ": "PT Tambang Mineral Utama",
+    "TLNL-ENT-V1": "Global AI Research Labs",
+    "TLNL-ENTERPRISE-DEMO": "Enterprise Evaluation User"
+}
 
 is_licensed = license_key in VALID_ENTERPRISE_KEYS
 
 if is_licensed:
-    st.sidebar.success("Status: Lisensi Enterprise Aktif ✅")
+    client_name = VALID_ENTERPRISE_KEYS[license_key]
+    st.sidebar.success(f"Status: Lisensi Enterprise Aktif ✅\nKlien: {client_name}")
     user_tier = "Enterprise"
+    
+    # Catat aktivitas klien ke database lokal
+    if license_key not in client_db:
+        client_db[license_key] = {"client_name": client_name, "status": "Active", "log_count": 1}
+    else:
+        client_db[license_key]["log_count"] += 1
+    save_client_db(client_db)
+
 else:
     if license_key:
         st.sidebar.error("License Key tidak valid atau kedaluwarsa.")
@@ -47,13 +76,18 @@ else:
     user_tier = "Free"
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 💼 Ingin Akses Enterprise?")
-st.sidebar.info("Dapatkan kunci lisensi penuh untuk membuka kapasitas tensor tanpa batas, multi-layer depth, dan unduh laporan audit resmi.")
-st.sidebar.markdown("[Hubungi Tim Sales / Support](mailto:support@aabaroq.tech)")
+st.sidebar.markdown("### 💳 Aktivasi & Pembayaran Lisensi")
+st.sidebar.info("Ingin berlangganan penuh? Pilih paket korporat dan lakukan aktivasi instan melalui tautan pembayaran resmi.")
+
+# Fitur Pilihan Paket & Metode Pembayaran di Sidebar
+selected_plan = st.sidebar.selectbox("Pilih Paket Langganan", ["Annual Pro License ($1,200/thn)", "Enterprise Dedicated ($4,500/thn)"])
+if st.sidebar.button("🚀 Checkout & Dapatkan Kunci Lisensi"):
+    st.sidebar.success("Simulasi Checkout Berhasil! Silakan hubungi admin via WhatsApp/Email untuk penerbitan kunci unik.")
+    st.sidebar.markdown("[Kirim Konfirmasi Pembayaran](mailto:support@aabaroq.tech)")
 
 # Main Panel Berdasarkan Tier Pengguna
 if user_tier == "Enterprise":
-    st.subheader("🚀 Panel Kontrol Tensor Lanjutan (Akses Penuh)")
+    st.subheader("🚀 Panel Kontrol Tensor Lanjutan & Visualisasi Matriks")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -63,18 +97,30 @@ if user_tier == "Enterprise":
         feature_dim = st.selectbox("Feature Dimension", [256, 512, 1024, 2048], index=1)
         learning_rate = st.number_input("Optimized Learning Rate", value=0.001, format="%.4f")
     
-    if st.button("Jalankan Komputasi Tensor Enterprise"):
-        with st.spinner("Memproses Tensor Lattice Neural Layer..."):
-            # Simulasi komputasi matriks berat
+    if st.button("Jalankan Komputasi & Analisis Matriks"):
+        with st.spinner("Memproses Tensor Lattice Neural Layer & Pemetaan Matriks..."):
             np.random.seed(42)
             sim_output = np.random.randn(batch_size, feature_dim) * lattice_depth
             latency = np.random.uniform(12.4, 28.5)
             
             st.success(f"Komputasi Berhasil! Latency: {latency:.2f} ms | Output Shape: `{sim_output.shape}`")
             
+            # Peningkatan Visualisasi Grafik Analisis Matriks
+            st.markdown("### 📊 Visualisasi Distribusi Bobot Tensor Lanjutan")
+            fig, ax = plt.subplots(figsize=(10, 4))
+            # Ambil sampel subset matriks untuk visualisasi yang bersih
+            subset_matrix = sim_output[:50, :50]
+            cax = ax.matshow(subset_matrix, cmap='viridis', aspect='auto')
+            fig.colorbar(cax)
+            ax.set_title("Heatmap Distribusi Aktivasi Lattice Neural Layer", pad=15, fontsize=12, fontweight='bold', color='#1e293b')
+            ax.set_xlabel("Feature Dimension Index")
+            ax.set_ylabel("Batch Index")
+            st.pyplot(fig)
+            
             # Buat data laporan audit untuk diunduh
             audit_data = {
                 "Tier": "Enterprise",
+                "Client": VALID_ENTERPRISE_KEYS[license_key],
                 "Batch Size": batch_size,
                 "Lattice Depth": lattice_depth,
                 "Feature Dimension": feature_dim,
@@ -83,19 +129,26 @@ if user_tier == "Enterprise":
             }
             json_report = json.dumps(audit_data, indent=4)
             
-            # Tombol Unduh Laporan JSON/Audit
             st.download_button(
                 label="📥 Unduh Laporan Audit Model (JSON)",
                 data=json_report,
                 file_name="TLNL_Enterprise_Audit_Report.json",
                 mime="application/json"
             )
+            
+    # Panel Khusus Admin / Pencatatan Klien
+    with st.expander("🛠️ Panel Admin: Log Pencatatan Klien Aktif"):
+        st.write("Daftar klien yang terdaftar di basis data lokal sistem:")
+        if client_db:
+            df_clients = pd.DataFrame.from_dict(client_db, orient='index')
+            st.dataframe(df_clients, use_container_width=True)
+        else:
+            st.info("Belum ada data klien yang tercatat.")
 
 else:
     st.subheader("🧪 Uji Coba Forward Pass (Mode Terbatas)")
     st.info("Anda sedang menggunakan **Free Tier**. Fitur ini dibatasi untuk pengujian dasar.")
     
-    # Batasan ketat untuk Free Tier
     free_batch_size = 32
     free_feature_dim = 128
     
@@ -106,7 +159,7 @@ else:
         st.metric(label="Simulasi Latency", value="45.2 ms")
     
     st.markdown("---")
-    st.warning("🔒 Ingin membuka kapasitas hingga Batch 512, kedalaman layer penuh, dan unduh laporan audit? Masukkan **License Key Enterprise** di panel samping.")
+    st.warning("🔒 Ingin membuka kapasitas penuh, visualisasi heatmap matriks, dan unduh laporan audit? Lakukan aktivasi lisensi enterprise melalui panel samping.")
 
 # Footer Section
 st.markdown("---")
