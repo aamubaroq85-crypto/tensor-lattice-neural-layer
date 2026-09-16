@@ -77,12 +77,25 @@ else:
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 💳 Aktivasi & Pembayaran Lisensi")
-st.sidebar.info("Ingin berlangganan penuh? Pilih paket korporat dan lakukan aktivasi instan melalui tautan pembayaran resmi.")
+st.sidebar.info("Pilih siklus penagihan dan paket korporat sesuai kebutuhan infrastruktur Anda.")
 
-# Fitur Pilihan Paket & Metode Pembayaran di Sidebar
-selected_plan = st.sidebar.selectbox("Pilih Paket Langganan", ["Annual Pro License ($1,200/thn)", "Enterprise Dedicated ($4,500/thn)"])
+# Opsi Siklus Penagihan (Billing Cycle)
+billing_cycle = st.sidebar.radio("Siklus Penagihan", ["Monthly Billing", "Annual Billing (Hemat 15%)"])
+
+# Pilihan Paket Berdasarkan Siklus Penagihan
+if billing_cycle == "Monthly Billing":
+    selected_plan = st.sidebar.selectbox("Pilih Paket Langganan", [
+        "Pro Monthly ($120/bln)", 
+        "Enterprise Monthly ($450/bln)"
+    ])
+else:
+    selected_plan = st.sidebar.selectbox("Pilih Paket Langganan", [
+        "Annual Pro License ($1,200/thn)", 
+        "Enterprise Dedicated ($4,500/thn)"
+    ])
+
 if st.sidebar.button("🚀 Checkout & Dapatkan Kunci Lisensi"):
-    st.sidebar.success("Simulasi Checkout Berhasil! Silakan hubungi admin via WhatsApp/Email untuk penerbitan kunci unik.")
+    st.sidebar.success(f"Simulasi Checkout ({billing_cycle}) Berhasil! Silakan konfirmasi pembayaran untuk penerbitan kunci.")
     st.sidebar.markdown("[Kirim Konfirmasi Pembayaran](mailto:support@aabaroq.tech)")
 
 # Main Panel Berdasarkan Tier Pengguna
@@ -108,7 +121,6 @@ if user_tier == "Enterprise":
             # Peningkatan Visualisasi Grafik Analisis Matriks
             st.markdown("### 📊 Visualisasi Distribusi Bobot Tensor Lanjutan")
             fig, ax = plt.subplots(figsize=(10, 4))
-            # Ambil sampel subset matriks untuk visualisasi yang bersih
             subset_matrix = sim_output[:50, :50]
             cax = ax.matshow(subset_matrix, cmap='viridis', aspect='auto')
             fig.colorbar(cax)
@@ -121,6 +133,8 @@ if user_tier == "Enterprise":
             audit_data = {
                 "Tier": "Enterprise",
                 "Client": VALID_ENTERPRISE_KEYS[license_key],
+                "Billing Cycle": billing_cycle,
+                "Selected Plan": selected_plan,
                 "Batch Size": batch_size,
                 "Lattice Depth": lattice_depth,
                 "Feature Dimension": feature_dim,
