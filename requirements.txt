@@ -2,3 +2,5 @@ torch
 streamlit
 pandas
 tensor-lattice-neural-layer
+numpy
+matplotlib
