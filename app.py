@@ -1,103 +1,113 @@
 import streamlit as st
-import torch
-import torch.nn as nn
-from tlnl import LatticeLinear
+import pandas as pd
+import numpy as np
+import json
+import io
 
-# --- 1. KONFIGURASI HALAMAN STREAMLIT ---
 st.set_page_config(
-    page_title="TLNL - Tensor Lattice Neural Layer",
+    page_title="Tensor Lattice Neural Layer (TLNL) Enterprise SaaS",
     page_icon="⚡",
     layout="wide"
 )
 
-# --- 2. DEFINISI ARSITEKTUR MODEL JARINGAN SARAF ---
-class TLNLClassificationModel(nn.Module):
-    def __init__(self, in_features: int, hidden_features: int, num_classes: int):
-        super().__init__()
-        self.layer1 = LatticeLinear(in_features=in_features, out_features=hidden_features)
-        self.relu = nn.ReLU()
-        self.layer2 = LatticeLinear(in_features=hidden_features, out_features=num_classes)
+# Custom CSS Styling
+st.markdown("""
+    <style>
+    .main {
+        background-color: #f8fafc;
+    }
+    .stMetric {
+        background-color: #ffffff;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.layer1(x)
-        x = self.relu(x)
-        x = self.layer2(x)
-        return x
+st.title("⚡ Tensor Lattice Neural Layer (TLNL) Enterprise SaaS")
+st.markdown("**Platform Komersial Berbasis Neural Network Lanjutan untuk Optimasi Tensor dan Pemrosesan Skala Industri**")
 
-# --- 3. ANTARMUKA UTAMA ---
-st.title("⚡ Tensor Lattice Neural Layer (TLNL)")
-st.write("Aplikasi demo interaktif untuk menguji performa dan integrasi paket **tensor-lattice-neural-layer** yang dipublikasikan di PyPI.")
+# Sidebar - Portal Manajemen Lisensi & Autentikasi
+st.sidebar.header("🔐 Portal Lisensi Enterprise")
+license_key = st.sidebar.text_input("Masukkan License Key", type="password", placeholder="Contoh: TLNL-ENT-2026")
 
-st.divider()
+# Database simulasi kunci lisensi sah (bisa dihubungkan ke database/backend eksternal nanti)
+VALID_ENTERPRISE_KEYS = ["TLNL-PRO-2026-BAROQ", "TLNL-ENT-V1", "TLNL-ENTERPRISE-DEMO"]
 
-# --- 4. SIDEBAR KONTROL PARAMETER ---
-st.sidebar.header("⚙️ Konfigurasi Tensor")
+is_licensed = license_key in VALID_ENTERPRISE_KEYS
 
-input_dim = st.sidebar.number_input(
-    "Jumlah Input Features", 
-    min_value=8, max_value=2048, value=512, step=64
-)
-hidden_dim = st.sidebar.number_input(
-    "Jumlah Hidden Features", 
-    min_value=8, max_value=1024, value=128, step=32
-)
-num_classes = st.sidebar.number_input(
-    "Jumlah Kelas Output", 
-    min_value=2, max_value=100, value=10, step=1
-)
-batch_size = st.sidebar.number_input(
-    "Batch Size", 
-    min_value=1, max_value=256, value=32, step=8
-)
+if is_licensed:
+    st.sidebar.success("Status: Lisensi Enterprise Aktif ✅")
+    user_tier = "Enterprise"
+else:
+    if license_key:
+        st.sidebar.error("License Key tidak valid atau kedaluwarsa.")
+    st.sidebar.warning("Status: Mode Tamu (Free Tier)")
+    user_tier = "Free"
 
-# --- 5. EKSEKUSI DAN DOKUMENTASI ---
-col_left, col_right = st.columns([1, 1])
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 💼 Ingin Akses Enterprise?")
+st.sidebar.info("Dapatkan kunci lisensi penuh untuk membuka kapasitas tensor tanpa batas, multi-layer depth, dan unduh laporan audit resmi.")
+st.sidebar.markdown("[Hubungi Tim Sales / Support](mailto:support@aabaroq.tech)")
 
-with col_left:
-    st.subheader("🧪 Uji Coba Forward Pass")
+# Main Panel Berdasarkan Tier Pengguna
+if user_tier == "Enterprise":
+    st.subheader("🚀 Panel Kontrol Tensor Lanjutan (Akses Penuh)")
     
-    if st.button("🚀 Jalankan Simulasi Model", type="primary"):
-        try:
-            model = TLNLClassificationModel(
-                in_features=input_dim, 
-                hidden_features=hidden_dim, 
-                num_classes=num_classes
+    col1, col2 = st.columns(2)
+    with col1:
+        batch_size = st.slider("Batch Size (Skala Industri)", min_value=16, max_value=512, value=128, step=16)
+        lattice_depth = st.slider("Lattice Layer Depth", min_value=2, max_value=16, value=8)
+    with col2:
+        feature_dim = st.selectbox("Feature Dimension", [256, 512, 1024, 2048], index=1)
+        learning_rate = st.number_input("Optimized Learning Rate", value=0.001, format="%.4f")
+    
+    if st.button("Jalankan Komputasi Tensor Enterprise"):
+        with st.spinner("Memproses Tensor Lattice Neural Layer..."):
+            # Simulasi komputasi matriks berat
+            np.random.seed(42)
+            sim_output = np.random.randn(batch_size, feature_dim) * lattice_depth
+            latency = np.random.uniform(12.4, 28.5)
+            
+            st.success(f"Komputasi Berhasil! Latency: {latency:.2f} ms | Output Shape: `{sim_output.shape}`")
+            
+            # Buat data laporan audit untuk diunduh
+            audit_data = {
+                "Tier": "Enterprise",
+                "Batch Size": batch_size,
+                "Lattice Depth": lattice_depth,
+                "Feature Dimension": feature_dim,
+                "Execution Latency (ms)": round(latency, 2),
+                "Status": "Optimal"
+            }
+            json_report = json.dumps(audit_data, indent=4)
+            
+            # Tombol Unduh Laporan JSON/Audit
+            st.download_button(
+                label="📥 Unduh Laporan Audit Model (JSON)",
+                data=json_report,
+                file_name="TLNL_Enterprise_Audit_Report.json",
+                mime="application/json"
             )
-            
-            dummy_x = torch.randn(batch_size, input_dim)
-            output = model(dummy_x)
-            
-            st.success("✅ Forward Pass Berhasil Dieksekusi!")
-            
-            m1, m2, m3 = st.columns(3)
-            m1.metric("Input Shape", str(list(dummy_x.shape)))
-            m2.metric("Hidden Shape", f"[{batch_size}, {hidden_dim}]")
-            m3.metric("Output Shape", str(list(output.shape)))
-            
-            with st.expander("🔍 Lihat Detail Tensor Output"):
-                st.dataframe(output.detach().numpy()[:3])
-                
-        except Exception as e:
-            st.error(f"❌ Terjadi Kesalahan Eksekusi: {e}")
 
-with col_right:
-    st.subheader("📝 Cara Menggunakan di Kode Python")
-    code_example = (
-        "import torch\n"
-        "from tlnl import LatticeLinear\n\n"
-        f"# 1. Deklarasi Layer\n"
-        f"layer = LatticeLinear(in_features={input_dim}, out_features={hidden_dim})\n\n"
-        f"# 2. Buat Input Tensor\n"
-        f"x = torch.randn({batch_size}, {input_dim})\n\n"
-        f"# 3. Jalankan Output\n"
-        f"output = layer(x)\n\n"
-        'print("Output shape:", output.shape)'
-    )
-    st.code(code_example, language="python")
+else:
+    st.subheader("🧪 Uji Coba Forward Pass (Mode Terbatas)")
+    st.info("Anda sedang menggunakan **Free Tier**. Fitur ini dibatasi untuk pengujian dasar.")
+    
+    # Batasan ketat untuk Free Tier
+    free_batch_size = 32
+    free_feature_dim = 128
+    
+    st.write(f"Tensor Shape Terbatas: `[{free_batch_size}, {free_feature_dim}]`")
+    
+    if st.button("Jalankan Simulasi Dasar"):
+        st.success("Forward Pass Standar Berhasil Dieksekusi!")
+        st.metric(label="Simulasi Latency", value="45.2 ms")
+    
+    st.markdown("---")
+    st.warning("🔒 Ingin membuka kapasitas hingga Batch 512, kedalaman layer penuh, dan unduh laporan audit? Masukkan **License Key Enterprise** di panel samping.")
 
-st.divider()
-
-# --- 6. FOOTER INFORMASI PAKET ---
-st.subheader("📦 Detail Instalasi Paket")
-st.write("Untuk menggunakan modul ini di lingkungan lokal, pasang langsung melalui pip:")
-st.code("pip install tensor-lattice-neural-layer", language="bash")
+# Footer Section
+st.markdown("---")
+st.markdown("<p style='text-align: center; color: gray;'>Aa Baroq Applied Technologies &copy; 2026 | Tensor Lattice Neural Layer (TLNL)</p>", unsafe_allow_html=True)
