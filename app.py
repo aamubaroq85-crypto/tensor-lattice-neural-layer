@@ -1,206 +1,136 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
-import json
-import os
-import matplotlib.pyplot as plt
 import torch
+import torch.nn as nn
+import time
 
-# --- IMPORT MODUL LOKAL TLNL ---
-from tlnl.core import apply_lattice_transform
-from tlnl.utils import measure_vram_and_latency
-from tlnl.layers import LatticeLinear
-
+# --- PENGATURAN HALAMAN STREAMLIT ---
 st.set_page_config(
-    page_title="Tensor Lattice Neural Layer (TLNL) Enterprise SaaS",
+    page_title="Tensor Lattice Neural Layer (TLNL) SaaS",
     page_icon="⚡",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Custom CSS Styling
+# --- STYLING CSS TAMBAHAN ---
 st.markdown("""
     <style>
-    .main {
-        background-color: #f8fafc;
-    }
-    .stMetric {
-        background-color: #ffffff;
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
+    .main-title { font-size: 28px; font-weight: bold; color: #1E3A8A; }
+    .sub-banner { background-color: #EFF6FF; padding: 15px; border-radius: 8px; border-left: 5px solid #3B82F6; }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("⚡ Tensor Lattice Neural Layer (TLNL) Enterprise SaaS")
-st.markdown("**Platform Komersial Berbasis Neural Network Lanjutan untuk Optimasi Tensor dan Pemrosesan Skala Industri**")
-
-# Inisialisasi Database Klien Lokal (JSON)
-DB_FILE = "client_database.json"
-
-def load_client_db():
-    if os.path.exists(DB_FILE):
-        with open(DB_FILE, "r") as f:
-            return json.load(f)
-    return {}
-
-def save_client_db(db):
-    with open(DB_FILE, "w") as f:
-        json.dump(db, f, indent=4)
-
-client_db = load_client_db()
-
-# Sidebar - Portal Manajemen Lisensi & Aktivasi Pembayaran
-st.sidebar.header("🔐 Portal Lisensi & Aktivasi")
-license_key = st.sidebar.text_input("Masukkan License Key", type="password", placeholder="Contoh: TLNL-ENT-2026")
-
-# Database simulasi kunci lisensi sah
-VALID_ENTERPRISE_KEYS = {
-    "TLNL-PRO-2026-BAROQ": "PT Tambang Mineral Utama",
-    "TLNL-ENT-V1": "Global AI Research Labs",
-    "TLNL-ENTERPRISE-DEMO": "Enterprise Evaluation User"
+# --- 1. DEFINISI PAKET & PAYMENT GATEWAY ---
+# Catatan: Ganti URL di bawah dengan Payment Link asli dari dashboard Stripe / Midtrans / Xendit Anda
+SUBSCRIPTION_PLANS = {
+    "Community (Free Open-Core)": {
+        "price": 0,
+        "features": ["Apache 2.0 License", "Local Core Engine", "Community Support"],
+        "payment_url": None
+    },
+    "Pro Developer ($99/mo)": {
+        "price": 99,
+        "features": ["Advanced Tensor Layers", "Priority VRAM Optimization", "Email Support"],
+        "payment_url": "https://buy.stripe.com/your_pro_payment_link_here"  # Ganti dengan link pembayaran asli
+    },
+    "Enterprise Cluster ($450/mo)": {
+        "price": 450,
+        "features": ["Multi-Node Scaling", "Dedicated Support", "Custom API Integration"],
+        "payment_url": "https://buy.stripe.com/your_enterprise_payment_link_here" # Ganti dengan link pembayaran asli
+    }
 }
 
-is_licensed = license_key in VALID_ENTERPRISE_KEYS
+# --- 2. CORE ENGINE: TENSOR LATTICE NEURAL LAYER (TLNL) ---
+class TensorLatticeNeuralLayer(nn.Module):
+    def __init__(self, in_features, out_features, lattice_scale=1.0):
+        super(TensorLatticeNeuralLayer, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.lattice_scale = lattice_scale
+        self.weight = nn.Parameter(torch.randn(out_features, in_features) * lattice_scale)
+        self.bias = nn.Parameter(torch.zeros(out_features))
 
-if is_licensed:
-    client_name = VALID_ENTERPRISE_KEYS[license_key]
-    st.sidebar.success(f"Status: Lisensi Enterprise Aktif ✅\nKlien: {client_name}")
-    user_tier = "Enterprise"
+    def forward(self, x):
+        # Transformasi kisi tensor modular
+        return torch.matmul(x, self.weight.T) + self.bias
+
+def measure_vram_and_latency(batch_size, in_feat, out_feat):
+    """Fungsi utilitas untuk mengukur latensi eksekusi dan simulasi penggunaan VRAM."""
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = TensorLatticeNeuralLayer(in_feat, out_feat).to(device)
+    x = torch.randn(batch_size, in_feat, device=device)
     
-    # Catat aktivitas klien ke database lokal
-    if license_key not in client_db:
-        client_db[license_key] = {"client_name": client_name, "status": "Active", "log_count": 1}
-    else:
-        client_db[license_key]["log_count"] += 1
-    save_client_db(client_db)
+    # Warmup
+    _ = model(x)
+    
+    start_time = time.time()
+    for _ in range(100):
+        _ = model(x)
+    end_time = time.time()
+    
+    latency_ms = ((end_time - start_time) / 100) * 1000
+    vram_mb = torch.cuda.memory_allocated(device) / (1024 * 1024) if torch.cuda.is_available() else 0.0
+    
+    return latency_ms, vram_mb, device.type
 
-else:
-    if license_key:
-        st.sidebar.error("License Key tidak valid atau kedaluwarsa.")
-    st.sidebar.warning("Status: Mode Tamu (Free Tier)")
-    user_tier = "Free"
+# --- 3. SIDEBAR: MANAJEMEN LISENSI & PEMBAYARAN ---
+st.sidebar.markdown("### ⚡ Licensi & Pembayaran")
+selected_plan = st.sidebar.selectbox("Pilih Tier Lisensi", list(SUBSCRIPTION_PLANS.keys()))
+
+plan_info = SUBSCRIPTION_PLANS[selected_plan]
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 💳 Aktivasi & Pembayaran Lisensi")
-st.sidebar.info("Pilih siklus penagihan dan paket korporat sesuai kebutuhan infrastruktur Anda.")
+st.sidebar.markdown(f"**Fitur Paket {selected_plan}:**")
+for feature in plan_info["features"]:
+    st.sidebar.markdown(f"- {feature}")
 
-# Opsi Siklus Penagihan (Billing Cycle)
-billing_cycle = st.sidebar.radio("Siklus Penagihan", ["Monthly Billing", "Annual Billing (Hemat 15%)"])
-
-# Pilihan Paket Berdasarkan Siklus Penagihan
-if billing_cycle == "Monthly Billing":
-    selected_plan = st.sidebar.selectbox("Pilih Paket Langganan", [
-        "Pro Monthly ($120/bln)", 
-        "Enterprise Monthly ($450/bln)"
-    ])
-else:
-    selected_plan = st.sidebar.selectbox("Pilih Paket Langganan", [
-        "Annual Pro License ($1,200/thn)", 
-        "Enterprise Dedicated ($4,500/thn)"
-    ])
-
-if st.sidebar.button("🚀 Checkout & Dapatkan Kunci Lisensi"):
-    st.sidebar.success(f"Simulasi Checkout ({billing_cycle}) Berhasil! Silakan konfirmasi pembayaran untuk penerbitan kunci.")
-    st.sidebar.markdown("[Kirim Konfirmasi Pembayaran](mailto:support@aabaroq.tech)")
-
-# Main Panel Berdasarkan Tier Pengguna
-if user_tier == "Enterprise":
-    st.subheader("🚀 Panel Kontrol Tensor Lanjutan & Visualisasi Matriks")
+if plan_info["price"] > 0:
+    st.sidebar.info(ikatan_harga := f"Harga Berlangganan: **${plan_info['price']} / bulan**")
     
-    col1, col2 = st.columns(2)
-    with col1:
-        batch_size = st.slider("Batch Size (Skala Industri)", min_value=16, max_value=512, value=128, step=16)
-        lattice_depth = st.slider("Lattice Layer Depth", min_value=2, max_value=16, value=8)
-    with col2:
-        feature_dim = st.selectbox("Feature Dimension", [256, 512, 1024, 2048], index=1)
-        learning_rate = st.number_input("Optimized Learning Rate", value=0.001, format="%.4f")
+    st.sidebar.markdown("### 💳 Checkout Pembayaran")
+    payment_link = plan_info["payment_url"]
     
-    if st.button("Jalankan Komputasi & Analisis Matriks"):
-        with st.spinner("Memproses Tensor Lattice Neural Layer & Pemetaan Matriks via PyTorch Core..."):
-            
-            # 1. Eksekusi menggunakan engine asli dari tlnl
-            input_tensor = torch.randn(batch_size, feature_dim)
-            transformed_tensor = apply_lattice_transform(input_tensor)
-            
-            # 2. Benchmark VRAM & Latency menggunakan utils.py
-            model = LatticeLinear(in_features=feature_dim, out_features=feature_dim)
-            metrics = measure_vram_and_latency(model, input_tensor)
-            
-            # Konversi tensor hasil transformasi ke numpy untuk visualisasi heatmap
-            sim_output = transformed_tensor.detach().numpy() * lattice_depth
-            
-            # Ambil latensi (menggunakan hasil ukur asli jika CUDA aktif, atau estimasi stabil)
-            if "error" not in metrics:
-                latency = metrics["latency_ms"]
-                vram_info = f" | VRAM Allocated: {metrics['vram_allocated_mb']} MB"
-            else:
-                latency = np.random.uniform(12.4, 28.5)
-                vram_info = " (CPU Mode / Standard Executed)"
-            
-            st.success(f"Komputasi Berhasil! Latency: {latency:.2f} ms{vram_info} | Output Shape: `{sim_output.shape}`")
-            
-            # Peningkatan Visualisasi Grafik Analisis Matriks
-            st.markdown("### 📊 Visualisasi Distribusi Bobot Tensor Lanjutan")
-            fig, ax = plt.subplots(figsize=(10, 4))
-            subset_matrix = sim_output[:50, :50]
-            cax = ax.matshow(subset_matrix, cmap='viridis', aspect='auto')
-            fig.colorbar(cax)
-            ax.set_title("Heatmap Aktivasi Lattice Neural Layer", pad=15, fontsize=12, fontweight='bold', color='#1e293b')
-            ax.set_xlabel("Feature Dimension Index")
-            ax.set_ylabel("Batch Index")
-            st.pyplot(fig)
-            
-            # Buat data laporan audit untuk diunduh
-            audit_data = {
-                "Tier": "Enterprise",
-                "Client": VALID_ENTERPRISE_KEYS[license_key],
-                "Billing Cycle": billing_cycle,
-                "Selected Plan": selected_plan,
-                "Batch Size": batch_size,
-                "Lattice Depth": lattice_depth,
-                "Feature Dimension": feature_dim,
-                "Execution Latency (ms)": round(latency, 2),
-                "Status": "Optimal"
-            }
-            json_report = json.dumps(audit_data, indent=4)
-            
-            st.download_button(
-                label="📥 Unduh Laporan Audit Model (JSON)",
-                data=json_report,
-                file_name="TLNL_Enterprise_Audit_Report.json",
-                mime="application/json"
-            )
-            
-    # Panel Khusus Admin / Pencatatan Klien
-    with st.expander("🛠️ Panel Admin: Log Pencatatan Klien Aktif"):
-        st.write("Daftar klien yang terdaftar di basis data lokal sistem:")
-        if client_db:
-            df_clients = pd.DataFrame.from_dict(client_db, orient='index')
-            st.dataframe(df_clients, use_container_width=True)
+    if st.sidebar.button("Proses Pembayaran via Gateway", type="primary"):
+        if payment_link and "your_" not in payment_link:
+            st.sidebar.markdown(f'<meta http-equiv="refresh" content="0;url={payment_link}">', unsafe_allow_html=True)
+            st.sidebar.success("Mengarahkan ke halaman pembayaran...")
+            st.sidebar.markdown(f"[🔗 Klik di Sini Jika Tab Tidak Membuka Otomatis]({payment_link})", unsafe_allow_html=True)
         else:
-            st.info("Belum ada data klien yang tercatat.")
-
+            st.sidebar.warning("Tautan pembayaran asli belum dikonfigurasi di kode sumber. Silakan masukkan link Stripe/Midtrans Anda.")
 else:
-    st.subheader("🧪 Uji Coba Forward Pass (Mode Terbatas)")
-    st.info("Anda sedang menggunakan **Free Tier**. Fitur ini dibatasi untuk pengujian dasar.")
-    
-    free_batch_size = 32
-    free_feature_dim = 128
-    
-    st.write(f"Tensor Shape Terbatas: `[{free_batch_size}, {free_feature_dim}]`")
-    
-    if st.button("Jalankan Simulasi Dasar"):
-        # Uji coba menggunakan core engine asli versi ringan
-        free_input = torch.randn(free_batch_size, free_feature_dim)
-        _ = apply_lattice_transform(free_input)
-        
-        st.success("Forward Pass Standar Berhasil Dieksekusi via TLNL Core!")
-        st.metric(label="Simulasi Latency", value="45.2 ms")
-    
-    st.markdown("---")
-    st.warning("🔒 Ingin membuka kapasitas penuh, visualisasi heatmap matriks, dan unduh laporan audit? Lakukan aktivasi lisensi enterprise melalui panel samping.")
+    st.sidebar.success("Anda menggunakan **Community Edition** gratis di bawah perlindungan **Apache License 2.0**.")
 
-# Footer Section
+# --- 4. DASHBOARD UTAMA APLIKASI ---
+st.markdown('<p class="main-title">Tensor Lattice Neural Layer (TLNL) SaaS Platform</p>', unsafe_allow_html=True)
+st.markdown("""
+<div class="sub-banner">
+<b>Open-Core Architecture Dashboard:</b> Platform komputasi neural berbasis kisi tensor tingkat lanjut dengan dukungan akselerasi PyTorch dan manajemen lisensi komersial terintegrasi.
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("### ⚙️ Konfigurasi Uji Coba Model")
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    batch_size = st.number_input("Batch Size", min_value=1, max_value=512, value=32)
+with col2:
+    in_features = st.number_input("Input Features", min_value=16, max_value=2048, value=128)
+with col3:
+    out_features = st.number_input("Output Features", min_value=16, max_value=2048, value=128)
+
+if st.button("Jalankan Transformasi Lattice & Analisis Performa", type="primary"):
+    with st.spinner("Memproses komputasi tensor..."):
+        latency, vram, dev_type = measure_vram_and_latency(batch_size, in_features, out_features)
+        
+        st.success("Komputasi Berhasil Dieksekusi!")
+        
+        mcol1, mcol2, mcol3 = st.columns(3)
+        mcol1.metric("Latensi Rata-rata (100 iterasi)", f"{latency:.4f} ms")
+        mcol2.metric("Alokasi VRAM", f"{vram:.2f} MB")
+        mcol3.metric("Hardware Device", dev_type.upper())
+
 st.markdown("---")
-st.markdown("<p style='text-align: center; color: gray;'>Aa Baroq Applied Technologies &copy; 2026 | Tensor Lattice Neural Layer (TLNL)</p>", unsafe_allow_html=True)
+st.markdown("### 🛡️ Status Kepatuhan Hukum & Open-Core")
+st.markdown("""
+- **Community Edition**: Dilindungi oleh **Apache License 2.0** (membebaskan penggunaan komersial komunitas dengan tetap melindungi hak paten kreator).
+- **Enterprise Extension**: Membutuhkan kunci lisensi aktif yang divalidasi melalui sistem pembayaran otomatis.
+""")
