@@ -1,31 +1,20 @@
 # Tensor Lattice Neural Layer (TLNL)
 
-**Tensor Lattice Neural Layer (TLNL)** adalah ekstensi PyTorch open-source yang menyediakan `LatticeLinear`—sebuah *drop-in replacement* performa tinggi untuk `nn.Linear` yang dioptimalkan untuk efisiensi pemetaan tensor dan latensi inferensi.
+**Tensor Lattice Neural Layer (TLNL)** is an open-source PyTorch extension that provides `LatticeLinear`—a high-performance drop-in replacement for `nn.Linear`, optimized for tensor mapping efficiency and inference latency.
 
-## 🚀 Fitur Utama
-* **Drop-in Replacement**: Kompatibel penuh dengan antarmuka `nn.Linear` standar PyTorch, sehingga dapat langsung menggantikan lapisan linear yang ada tanpa mengubah arsitektur model secara keseluruhan.
-* **Latensi Lebih Cepat**: Pengujian benchmark pada GPU NVIDIA T4 menunjukkan peningkatan kecepatan inferensi hingga **~12.90%** dibandingkan `nn.Linear` standar.
-* **Efisiensi Memori**: Dioptimalkan untuk stabilitas eksekusi berbasis PyTorch core untuk menjaga overhead VRAM tetap minimal.
+---
 
-## 📦 Instalasi
-Instal langsung via PyPI:
+## 🚀 Key Features
+
+* **Drop-In Replacement:** Fully compatible with PyTorch's standard `nn.Linear` interface, allowing you to instantly swap out existing linear layers without altering your overall model architecture.[span_0](start_span)[span_0](end_span)
+* **Faster Latency:** Benchmark testing on an NVIDIA T4 GPU demonstrates an inference speedup of up to ~12.90% compared to standard `nn.Linear`.[span_1](start_span)[span_1](end_span)
+* **Memory Efficiency:** Optimized for core PyTorch execution stability to keep VRAM overhead minimal.[span_2](start_span)[span_2](end_span)
+
+---
+
+## 📦 Installation
+
+Install directly via PyPI (or clone and install locally):
+
 ```bash
 pip install tensor-lattice-neural-layer
-import torch
-import torch.nn as nn
-from tensor_lattice_neural_layer import LatticeLinear
-
-# Mengganti nn.Linear dengan LatticeLinear secara instan
-class SimpleModel(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.fc1 = LatticeLinear(in_features=512, out_features=256)
-        self.relu = nn.ReLU()
-        
-    def forward(self, x):
-        return self.relu(self.fc1(x))
-
-model = SimpleModel().cuda()
-x = torch.randn(32, 512, device='cuda')
-output = model(x)
-print(output.shape)
