@@ -25,7 +25,7 @@ pip install tensor-lattice-neural-layer
 ```
 
 
-markdown
+
 ## 🏢 Ingin Performa Maksimal? (Enterprise Tier)
 
 Bagi perusahaan, institusi, atau peneliti yang membutuhkan performa tingkat lanjut—seperti akselerasi penuh pada GPU NVIDIA T4 (peningkatan kecepatan inferensi hingga ~12.90%) serta modul optimasi eksklusif—Anda dapat meningkatkan ke **TLNL Enterprise Core**.
