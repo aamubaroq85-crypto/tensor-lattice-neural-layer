@@ -25,7 +25,8 @@ Proyek ini dikembangkan menggunakan arsitektur *open-core*, di mana fungsionalit
 
 Anda dapat menginstal paket Community Edition ini langsung secara lokal:
 
-```bash
+```
+bash
 pip install tensor-lattice-neural-layer
 Atau jalankan proyek secara instan menggunakan **GitHub Codespaces** dengan mengeklik tombol di bagian atas dokumen ini.
 ## 🏢 Ingin Performa Maksimal? (Enterprise Tier)
