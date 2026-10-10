@@ -5,10 +5,14 @@ import torch
 import pandas as pd
 
 # ==========================================
-# INTERNAL PROTECTED CORE (Zuhri Formalism ZF-DK)
-# Nilai rahasia dienkapsulasi di server-side dan tidak diekspos ke publik
+# SECURE CORE ENGINE (Zuhri Formalism ZF-DK)
+# Nilai rahasia dimuat secara aman dari Streamlit Secrets server-side
 # ==========================================
-_SECRET_PI_EFF_BASE = 3.141592653589793
+try:
+    _SECRET_PI_EFF_BASE = float(st.secrets["security"]["SECRET_PI_EFF_BASE"])
+except Exception:
+    # Fallback aman jika dijalankan secara lokal tanpa file secrets.toml
+    _SECRET_PI_EFF_BASE = 3.141592653589793
 
 # Page Configuration
 st.set_page_config(
@@ -57,7 +61,7 @@ if st.button("Run Lattice Transformation & Performance Analysis", type="primary"
         else:
             x = torch.randn(batch_size, input_features, device=device)
 
-        # Menggunakan konstanta privat terenkripsi di server (tidak tampil di UI publik)
+        # Menggunakan konstanta privat yang dimuat dari Streamlit Secrets
         weight = torch.randn(output_features, input_features, device=device) * (_SECRET_PI_EFF_BASE / 10.0)
         device_type = 'cuda' if x.is_cuda else 'cpu'
         
@@ -86,7 +90,6 @@ if st.button("Run Lattice Transformation & Performance Analysis", type="primary"
     col_m1, col_m2, col_m3 = st.columns(3)
     col_m1.metric("Average Latency (100 iterations)", f"{avg_latency:.4f} ms", f"{delta_latency:+.2f}%")
     col_m2.metric("VRAM Allocation", f"{vram_allocation:.2f} MB", f"{(load_factor - 1)*25:+.2f}%")
-    # Indikator publik disamarkan tanpa membocorkan nama formula rahasia
     col_m3.metric("Hardware Device", "CPU Optimized" if device=='cpu' else "NVIDIA T4 GPU", "Secure Core Active")
 
 st.markdown("---")
